@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Yeni ilan oluştur
+// POST - Yeni ilan oluştur veya resim kopyala
 export async function POST(request: NextRequest) {
   try {
     const authenticated = await isAdminAuthenticated();
@@ -48,6 +48,29 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    
+    // Resim kopyalama işlemi
+    if (body.action === 'copy-image') {
+      const { listingId, imageUrl } = body;
+      
+      const { data, error } = await supabaseAdmin
+        .from('listing_images')
+        .insert({
+          listing_id: listingId,
+          image_url: imageUrl,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Resim kopyalama hatası:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ image: data });
+    }
+    
+    // Normal ilan oluşturma
     const { name, description, price, period, listing_date } = body;
 
     if (!name || !description || !price || !period || !listing_date) {
