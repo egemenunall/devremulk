@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'TimeShare - Devre Mülk İlanları',
+  title: 'Lavinia Reklam Pazarlama - Devre Mülk İlanları',
   description: 'En uygun devre mülk fırsatlarını keşfedin',
 };
 

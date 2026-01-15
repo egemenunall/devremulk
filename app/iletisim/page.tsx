@@ -47,8 +47,8 @@ export default function IletisimPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">E-posta</h3>
-                  <a href="mailto:info@timeshare.com" className="text-blue-600 hover:text-blue-700">
-                    info@timeshare.com
+                  <a href="mailto:lavinia3071@gmail.com" className="text-blue-600 hover:text-blue-700">
+                    lavinia3071@gmail.com
                   </a>
                   <p className="text-sm text-gray-500 mt-1">7/24 destek</p>
                 </div>
@@ -63,8 +63,8 @@ export default function IletisimPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Telefon</h3>
-                  <a href="tel:+905001234567" className="text-blue-600 hover:text-blue-700">
-                    +90 (500) 123 45 67
+                  <a href="tel:+905421316072" className="text-blue-600 hover:text-blue-700">
+                    0542 131 60 72
                   </a>
                   <p className="text-sm text-gray-500 mt-1">Hafta içi 09:00 - 18:00</p>
                 </div>
@@ -81,9 +81,9 @@ export default function IletisimPage() {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Adres</h3>
                   <p className="text-gray-600">
-                    Nispetiye Mahallesi<br />
-                    Aytar Caddesi No: 10<br />
-                    Beşiktaş, İstanbul
+                    Altayçeşme Mahallesi<br />
+                    Çamlı Sokak No: 21<br />
+                    Maltepe, İstanbul
                   </p>
                 </div>
               </div>
@@ -97,8 +97,8 @@ export default function IletisimPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">WhatsApp</h3>
-                  <a href="https://wa.me/905001234567" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
-                    +90 (500) 123 45 67
+                  <a href="https://wa.me/905421316072" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
+                    0542 131 60 72
                   </a>
                   <p className="text-sm text-gray-500 mt-1">Anında mesaj gönderin</p>
                 </div>

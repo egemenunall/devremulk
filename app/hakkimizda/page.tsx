@@ -31,7 +31,7 @@ export default function HakkimizdaPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Hikayemiz</h2>
           <div className="prose prose-lg text-gray-600 space-y-4">
             <p>
-              TimeShare, Türkiye'nin önde gelen devre mülk platformlarından biridir. 2020 yılında kurulan şirketimiz, 
+              Lavinia Reklam Pazarlama, Türkiye'nin önde gelen devre mülk platformlarından biridir. 2020 yılında kurulan şirketimiz, 
               tatil severlerin hayallerindeki tatil evlerine ulaşmalarını kolaylaştırmak amacıyla yola çıktı.
             </p>
             <p>
@@ -118,7 +118,7 @@ export default function HakkimizdaPage() {
 
         {/* Stats */}
         <section className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-8 md:p-12 text-white">
-          <h2 className="text-2xl font-bold mb-8 text-center">Rakamlarla TimeShare</h2>
+          <h2 className="text-2xl font-bold mb-8 text-center">Rakamlarla Lavinia</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="text-4xl font-bold mb-2">500+</div>

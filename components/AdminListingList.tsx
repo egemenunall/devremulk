@@ -16,6 +16,7 @@ export default function AdminListingList({
   onDelete,
 }: AdminListingListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [copyingId, setCopyingId] = useState<string | null>(null);
 
   const handleDelete = async (listing: ListingWithImages) => {
     if (!confirm(`"${listing.name}" ilanını silmek istediğinizden emin misiniz?`)) {
@@ -39,6 +40,71 @@ export default function AdminListingList({
       alert(error instanceof Error ? error.message : 'İlan silinirken bir hata oluştu.');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleCopy = async (listing: ListingWithImages) => {
+    if (!confirm(`"${listing.name}" ilanının kopyası oluşturulsun mu?`)) {
+      return;
+    }
+
+    setCopyingId(listing.id);
+
+    try {
+      // Yeni ilan oluştur (kopya)
+      const newListing = {
+        name: `${listing.name} (Kopya)`,
+        description: listing.description,
+        price: listing.price,
+        period: listing.period,
+        listing_date: new Date().toISOString().split('T')[0],
+      };
+
+      const response = await fetch('/api/admin/listings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newListing),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'İlan kopyalanamadı');
+      }
+
+      const { listing: createdListing } = await response.json();
+
+      // Resimleri kopyala
+      for (const image of listing.images) {
+        try {
+          // Resim URL'sini al ve yeni ilana bağla
+          const imageResponse = await fetch('/api/admin/listings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              listingId: createdListing.id,
+              imageUrl: image.image_url,
+              action: 'copy-image',
+            }),
+          });
+
+          if (!imageResponse.ok) {
+            console.error('Resim kopyalanamadı:', image.image_url);
+          }
+        } catch (imageError) {
+          console.error('Resim kopyalama hatası:', imageError);
+        }
+      }
+
+      alert('İlan başarıyla kopyalandı!');
+      onDelete(); // Liste yenilensin
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'İlan kopyalanırken bir hata oluştu.');
+    } finally {
+      setCopyingId(null);
     }
   };
 
@@ -121,10 +187,24 @@ export default function AdminListingList({
                     {new Date(listing.listing_date).toLocaleDateString('tr-TR')}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                  <button
+                    onClick={() => handleCopy(listing)}
+                    disabled={copyingId === listing.id}
+                    className="text-green-600 hover:text-green-900 disabled:text-gray-400"
+                    title="İlanı Kopyala"
+                  >
+                    {copyingId === listing.id ? (
+                      'Kopyalanıyor...'
+                    ) : (
+                      <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                  </button>
                   <button
                     onClick={() => onEdit(listing)}
-                    className="text-blue-600 hover:text-blue-900 mr-4"
+                    className="text-blue-600 hover:text-blue-900"
                   >
                     Düzenle
                   </button>
