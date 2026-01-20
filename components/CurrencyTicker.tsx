@@ -11,28 +11,97 @@ interface CurrencyRate {
   icon: string;
 }
 
+interface ExchangeRateData {
+  rates: {
+    TRY: number;
+    USD: number;
+    EUR: number;
+    GBP: number;
+  };
+}
+
 export default function CurrencyTicker() {
   const [rates, setRates] = useState<CurrencyRate[]>([
     { code: 'USD', name: 'Dolar', buying: 34.15, selling: 34.28, change: 0.45, icon: '$' },
     { code: 'EUR', name: 'Euro', buying: 37.42, selling: 37.58, change: -0.12, icon: '€' },
     { code: 'GBP', name: 'Sterlin', buying: 43.21, selling: 43.39, change: 0.28, icon: '£' },
   ]);
+  const [loading, setLoading] = useState(true);
+  const [prevRates, setPrevRates] = useState<{ [key: string]: number }>({});
 
-  // Simüle edilmiş gerçek zamanlı güncelleme (opsiyonel)
+  // Gerçek döviz kurlarını çek
+  const fetchRates = async () => {
+    try {
+      const response = await fetch('https://api.exchangerate-api.com/v4/latest/TRY');
+      const data: ExchangeRateData = await response.json();
+
+      // TRY bazlı API, USD/EUR/GBP'nin TRY karşılığını hesapla
+      const usdRate = 1 / data.rates.USD;
+      const eurRate = 1 / data.rates.EUR;
+      const gbpRate = 1 / data.rates.GBP;
+
+      // Değişim oranlarını hesapla
+      const calculateChange = (code: string, newRate: number) => {
+        if (prevRates[code]) {
+          return ((newRate - prevRates[code]) / prevRates[code]) * 100;
+        }
+        return 0;
+      };
+
+      const newRates: CurrencyRate[] = [
+        {
+          code: 'USD',
+          name: 'Dolar',
+          buying: usdRate,
+          selling: usdRate * 1.005, // %0.5 spread
+          change: calculateChange('USD', usdRate),
+          icon: '$',
+        },
+        {
+          code: 'EUR',
+          name: 'Euro',
+          buying: eurRate,
+          selling: eurRate * 1.005,
+          change: calculateChange('EUR', eurRate),
+          icon: '€',
+        },
+        {
+          code: 'GBP',
+          name: 'Sterlin',
+          buying: gbpRate,
+          selling: gbpRate * 1.005,
+          change: calculateChange('GBP', gbpRate),
+          icon: '£',
+        },
+      ];
+
+      setPrevRates({
+        USD: usdRate,
+        EUR: eurRate,
+        GBP: gbpRate,
+      });
+
+      setRates(newRates);
+      setLoading(false);
+    } catch (error) {
+      console.error('Döviz kurları yüklenemedi:', error);
+      setLoading(false);
+    }
+  };
+
+  // İlk yükleme
+  useEffect(() => {
+    fetchRates();
+  }, []);
+
+  // Her 5 dakikada bir güncelle
   useEffect(() => {
     const interval = setInterval(() => {
-      setRates(prevRates =>
-        prevRates.map(rate => ({
-          ...rate,
-          buying: rate.buying + (Math.random() - 0.5) * 0.1,
-          selling: rate.selling + (Math.random() - 0.5) * 0.1,
-          change: (Math.random() - 0.5) * 1,
-        }))
-      );
-    }, 5000);
+      fetchRates();
+    }, 5 * 60 * 1000); // 5 dakika
 
     return () => clearInterval(interval);
-  }, []);
+  }, [prevRates]);
 
   return (
     <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-y border-gray-200">
