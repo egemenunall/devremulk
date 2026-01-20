@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ListingWithImages } from '@/lib/types';
 import ImageUploader from '@/components/ImageUploader';
+import MediaLibraryModal from '@/components/MediaLibraryModal';
 
 interface AdminListingFormProps {
   listing: ListingWithImages | null;
@@ -24,6 +25,8 @@ export default function AdminListingForm({
   const [images, setImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<any[]>([]);
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
+  const [selectedMediaUrls, setSelectedMediaUrls] = useState<string[]>([]);
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -134,7 +137,27 @@ export default function AdminListingForm({
         const data = await response.json();
         listingId = data.listing.id;
 
-        // Görselleri yükle (sadece yeni ilan için)
+        // Medya kütüphanesinden seçilen görselleri ekle
+        if (selectedMediaUrls.length > 0) {
+          for (let i = 0; i < selectedMediaUrls.length; i++) {
+            const response = await fetch('/api/admin/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                listing_id: listingId,
+                image_url: selectedMediaUrls[i],
+                order: i,
+                from_library: true,
+              }),
+            });
+
+            if (!response.ok) {
+              console.error('Medya kütüphanesinden görsel eklenemedi');
+            }
+          }
+        }
+
+        // Yeni yüklenen görselleri ekle (sadece yeni ilan için)
         if (images.length > 0) {
           for (let i = 0; i < images.length; i++) {
             const formData = new FormData();
@@ -318,18 +341,71 @@ export default function AdminListingForm({
           </div>
         )}
 
-        {/* Yeni Görseller Ekle */}
+        {/* Görseller */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
             {listing ? 'Yeni Görseller Ekle' : 'Görseller'}
           </label>
-          <ImageUploader images={images} onChange={setImages} />
+          
+          {/* Medya Kütüphanesinden Seçilen Görseller */}
+          {selectedMediaUrls.length > 0 && (
+            <div className="mb-4">
+              <div className="text-sm text-gray-600 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Medya kütüphanesinden {selectedMediaUrls.length} görsel seçildi
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {selectedMediaUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img src={url} alt="" className="w-full h-20 object-cover rounded border" />
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMediaUrls(prev => prev.filter((_, i) => i !== index))}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Butonlar */}
+          <div className="flex gap-3 mb-4">
+            <button
+              type="button"
+              onClick={() => setShowMediaLibrary(true)}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Medya Kütüphanesinden Seç
+            </button>
+            <div className="flex-1">
+              <ImageUploader images={images} onChange={setImages} />
+            </div>
+          </div>
+          
           {listing && (
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="text-sm text-gray-500">
               Yeni görseller mevcut görsellerin sonuna eklenecektir.
             </p>
           )}
         </div>
+
+        {/* Media Library Modal */}
+        <MediaLibraryModal
+          isOpen={showMediaLibrary}
+          onClose={() => setShowMediaLibrary(false)}
+          onSelect={(urls) => setSelectedMediaUrls(prev => [...prev, ...urls])}
+          multiple={true}
+        />
 
         {/* Hata Mesajı */}
         {error && (

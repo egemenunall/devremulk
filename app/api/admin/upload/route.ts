@@ -22,6 +22,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
+    // JSON veya FormData olabilir
+    const contentType = request.headers.get('content-type');
+    
+    if (contentType?.includes('application/json')) {
+      // Medya kütüphanesinden seçilen görsel
+      const body = await request.json();
+      const { listing_id, image_url, order } = body;
+
+      if (!listing_id || !image_url) {
+        return NextResponse.json({ error: 'Listing ID ve image URL gerekli' }, { status: 400 });
+      }
+
+      // Veritabanına kaydet (storage'a yüklemeye gerek yok, zaten var)
+      const { data: image, error: dbError } = await supabaseAdmin
+        .from('listing_images')
+        .insert([
+          {
+            listing_id,
+            image_url,
+            order: parseInt(order || '0'),
+          },
+        ])
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error('Görsel kaydedilirken hata:', dbError);
+        return NextResponse.json(
+          { error: 'Görsel kaydedilemedi', details: dbError.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ image }, { status: 201 });
+    }
+
+    // FormData - Yeni dosya yükleme
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const listingId = formData.get('listing_id') as string;
