@@ -139,11 +139,35 @@ export default function AdminListingForm({
           }
         }
 
-        // Yeni görselleri yükle (güncelleme için)
-        if (images.length > 0) {
+        // Medya kütüphanesinden seçilen görselleri ekle (güncelleme için)
+        if (selectedMediaUrls.length > 0) {
           const currentMaxOrder = existingImages.length > 0 
             ? Math.max(...existingImages.map(img => img.order || 0))
             : -1;
+
+          for (let i = 0; i < selectedMediaUrls.length; i++) {
+            const response = await fetch('/api/admin/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                listing_id: listingId,
+                image_url: selectedMediaUrls[i],
+                order: currentMaxOrder + i + 1,
+              }),
+            });
+
+            if (!response.ok) {
+              console.error('Medya kütüphanesinden görsel eklenemedi');
+            }
+          }
+        }
+
+        // Yeni yüklenen görselleri ekle (güncelleme için)
+        if (images.length > 0) {
+          const currentMaxOrder = Math.max(
+            existingImages.length > 0 ? Math.max(...existingImages.map(img => img.order || 0)) : -1,
+            selectedMediaUrls.length - 1
+          );
 
           for (let i = 0; i < images.length; i++) {
             const formData = new FormData();
@@ -187,7 +211,6 @@ export default function AdminListingForm({
                 listing_id: listingId,
                 image_url: selectedMediaUrls[i],
                 order: i,
-                from_library: true,
               }),
             });
 
@@ -199,11 +222,12 @@ export default function AdminListingForm({
 
         // Yeni yüklenen görselleri ekle (sadece yeni ilan için)
         if (images.length > 0) {
+          const startOrder = selectedMediaUrls.length;
           for (let i = 0; i < images.length; i++) {
             const formData = new FormData();
             formData.append('file', images[i]);
             formData.append('listing_id', listingId);
-            formData.append('order', i.toString());
+            formData.append('order', (startOrder + i).toString());
 
             const uploadResponse = await fetch('/api/admin/upload', {
               method: 'POST',
