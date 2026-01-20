@@ -7,7 +7,24 @@ interface ListingCardProps {
 }
 
 export function ListingCard({ listing }: ListingCardProps) {
-  const mainImage = listing.images[0]?.image_url || '/placeholder.jpg';
+  // İlan ID'sine göre deterministik rastgele görsel seç
+  const getRandomImageIndex = (id: string, totalImages: number) => {
+    if (totalImages === 0) return 0;
+    // ID'nin son karakterlerini sayıya çevir
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = ((hash << 5) - hash) + id.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash) % totalImages;
+  };
+
+  const imageIndex = listing.images.length > 0 
+    ? getRandomImageIndex(listing.id, listing.images.length)
+    : 0;
+  
+  const mainImage = listing.images[imageIndex]?.image_url || '/placeholder.jpg';
+  
   const formattedDate = new Date(listing.listing_date).toLocaleDateString('tr-TR', {
     year: 'numeric',
     month: 'long',
