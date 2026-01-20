@@ -68,6 +68,32 @@ export default function AdminListingForm({
     }
   };
 
+  const moveExistingImage = (index: number, direction: 'up' | 'down') => {
+    setExistingImages(prev => {
+      const newImages = [...prev];
+      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      
+      if (newIndex < 0 || newIndex >= newImages.length) return prev;
+      
+      [newImages[index], newImages[newIndex]] = [newImages[newIndex], newImages[index]];
+      
+      // Sıraları güncelle
+      return newImages.map((img, idx) => ({ ...img, order: idx }));
+    });
+  };
+
+  const moveSelectedMediaUrl = (index: number, direction: 'up' | 'down') => {
+    setSelectedMediaUrls(prev => {
+      const newUrls = [...prev];
+      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      
+      if (newIndex < 0 || newIndex >= newUrls.length) return prev;
+      
+      [newUrls[index], newUrls[newIndex]] = [newUrls[newIndex], newUrls[index]];
+      return newUrls;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -98,6 +124,20 @@ export default function AdminListingForm({
           throw new Error(data.error || 'İlan güncellenemedi');
         }
         listingId = listing.id;
+
+        // Mevcut görsellerin sırasını güncelle
+        if (existingImages.length > 0) {
+          for (let i = 0; i < existingImages.length; i++) {
+            const img = existingImages[i];
+            if (img.order !== i) {
+              await fetch(`/api/admin/listings/images/${img.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order: i }),
+              });
+            }
+          }
+        }
 
         // Yeni görselleri yükle (güncelleme için)
         if (images.length > 0) {
@@ -315,13 +355,41 @@ export default function AdminListingForm({
               Mevcut Görseller
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {existingImages.map((image) => (
+              {existingImages.map((image, index) => (
                 <div key={image.id} className="relative group">
                   <img
                     src={image.image_url}
                     alt="İlan görseli"
                     className="w-full h-32 object-cover rounded-lg border border-gray-200"
                   />
+                  
+                  {/* Sıralama Butonları */}
+                  <div className="absolute top-2 left-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => moveExistingImage(index, 'up')}
+                      disabled={index === 0}
+                      className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      title="Yukarı taşı"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveExistingImage(index, 'down')}
+                      disabled={index === existingImages.length - 1}
+                      className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      title="Aşağı taşı"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {/* Silme Butonu */}
                   <button
                     type="button"
                     onClick={() => handleDeleteExistingImage(image.id)}
@@ -332,8 +400,10 @@ export default function AdminListingForm({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                  <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                    #{image.order + 1}
+                  
+                  {/* Sıra Numarası */}
+                  <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">
+                    #{index + 1}
                   </div>
                 </div>
               ))}
@@ -356,19 +426,53 @@ export default function AdminListingForm({
                 </svg>
                 Medya kütüphanesinden {selectedMediaUrls.length} görsel seçildi
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {selectedMediaUrls.map((url, index) => (
                   <div key={index} className="relative group">
-                    <img src={url} alt="" className="w-full h-20 object-cover rounded border" />
+                    <img src={url} alt="" className="w-full h-24 object-cover rounded-lg border-2 border-gray-200" />
+                    
+                    {/* Sıralama Butonları */}
+                    <div className="absolute top-2 left-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => moveSelectedMediaUrl(index, 'up')}
+                        disabled={index === 0}
+                        className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        title="Yukarı taşı"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveSelectedMediaUrl(index, 'down')}
+                        disabled={index === selectedMediaUrls.length - 1}
+                        className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        title="Aşağı taşı"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    {/* Silme Butonu */}
                     <button
                       type="button"
                       onClick={() => setSelectedMediaUrls(prev => prev.filter((_, i) => i !== index))}
-                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      title="Kaldır"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
+                    
+                    {/* Sıra Numarası */}
+                    <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">
+                      #{index + 1}
+                    </div>
                   </div>
                 ))}
               </div>

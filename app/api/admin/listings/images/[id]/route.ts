@@ -87,3 +87,44 @@ export async function DELETE(
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
   }
 }
+
+// PATCH - Görselin sırasını güncelle
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const authenticated = await isAdminAuthenticated();
+    if (!authenticated) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+    }
+
+    const resolvedParams = await params;
+    const imageId = resolvedParams.id;
+    const body = await request.json();
+    const { order } = body;
+
+    if (order === undefined) {
+      return NextResponse.json({ error: 'Order gerekli' }, { status: 400 });
+    }
+
+    // Sırayı güncelle
+    const { error: updateError } = await supabaseAdmin
+      .from('listing_images')
+      .update({ order: parseInt(order) })
+      .eq('id', imageId);
+
+    if (updateError) {
+      console.error('Sıra güncellenemedi:', updateError);
+      return NextResponse.json(
+        { error: 'Sıra güncellenemedi' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error('Sunucu hatası:', error);
+    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
+  }
+}
