@@ -16,7 +16,7 @@ const supabaseAdmin = createClient(
 // DELETE - Görseli sil
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authenticated = await isAdminAuthenticated();
@@ -24,7 +24,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
-    const imageId = params.id;
+    const resolvedParams = await params;
+    const imageId = resolvedParams.id;
 
     // Önce görselin URL'sini al (storage'dan silmek için)
     const { data: image, error: fetchError } = await supabaseAdmin
