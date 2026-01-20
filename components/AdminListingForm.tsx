@@ -125,16 +125,22 @@ export default function AdminListingForm({
         }
         listingId = listing.id;
 
-        // Mevcut görsellerin sırasını güncelle
+        // Mevcut görsellerin sırasını güncelle (TÜM görselleri güncelle)
         if (existingImages.length > 0) {
-          for (let i = 0; i < existingImages.length; i++) {
-            const img = existingImages[i];
-            if (img.order !== i) {
-              await fetch(`/api/admin/listings/images/${img.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ order: i }),
-              });
+          const updatePromises = existingImages.map((img, i) => 
+            fetch(`/api/admin/listings/images/${img.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ order: i }),
+            })
+          );
+          
+          const results = await Promise.all(updatePromises);
+          
+          // Hataları kontrol et
+          for (const result of results) {
+            if (!result.ok) {
+              console.error('Görsel sırası güncellenemedi:', await result.text());
             }
           }
         }
