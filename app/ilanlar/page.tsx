@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { ListingCard } from '@/components/ListingCard';
 import { FilterBar } from '@/components/FilterBar';
 import { getListings, getUniquePeriods } from '@/lib/api';
@@ -8,7 +8,7 @@ import { ListingWithImages, FilterParams } from '@/lib/types';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-export default function IlanlarPage() {
+function IlanlarContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('search');
 
@@ -158,5 +158,34 @@ export default function IlanlarPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function IlanlarPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              Tüm Devre Mülk İlanları
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Yükleniyor...
+            </p>
+          </div>
+        </div>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-20">
+            <div className="inline-block">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600"></div>
+            </div>
+            <p className="mt-4 text-gray-600">Yükleniyor...</p>
+          </div>
+        </main>
+      </div>
+    }>
+      <IlanlarContent />
+    </Suspense>
   );
 }
