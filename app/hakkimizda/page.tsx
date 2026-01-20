@@ -31,7 +31,7 @@ export default function HakkimizdaPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Hikayemiz</h2>
           <div className="prose prose-lg text-gray-600 space-y-4">
             <p>
-              Lavinia Reklam Pazarlama, Türkiye'nin önde gelen devre mülk platformlarından biridir. 2020 yılında kurulan şirketimiz, 
+              Lavinia Reklam Pazarlama, Türkiye'nin önde gelen devre mülk platformlarından biridir. 2024 yılında kurulan şirketimiz, 
               tatil severlerin hayallerindeki tatil evlerine ulaşmalarını kolaylaştırmak amacıyla yola çıktı.
             </p>
             <p>

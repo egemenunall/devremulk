@@ -7,6 +7,7 @@ export interface Listing {
   price: number;
   period: string;
   listing_date: string; // ISO date string
+  is_featured: boolean;
   created_at: string;
 }
 

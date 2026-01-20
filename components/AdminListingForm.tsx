@@ -20,7 +20,10 @@ export default function AdminListingForm({
   const [price, setPrice] = useState('');
   const [period, setPeriod] = useState('');
   const [listingDate, setListingDate] = useState('');
+  const [isFeatured, setIsFeatured] = useState(false);
   const [images, setImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<any[]>([]);
+  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,11 +34,36 @@ export default function AdminListingForm({
       setPrice(listing.price.toString());
       setPeriod(listing.period);
       setListingDate(listing.listing_date);
+      setIsFeatured(listing.is_featured || false);
+      setExistingImages(listing.images || []);
+      setDeletedImageIds([]);
     } else {
       // Yeni ilan için bugünün tarihini varsayılan olarak ayarla
       setListingDate(new Date().toISOString().split('T')[0]);
+      setIsFeatured(false);
+      setExistingImages([]);
+      setDeletedImageIds([]);
     }
   }, [listing]);
+
+  const handleDeleteExistingImage = async (imageId: string) => {
+    if (!confirm('Bu görseli silmek istediğinizden emin misiniz?')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/listings/images/${imageId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Görsel silinemedi');
+      }
+
+      setExistingImages(prev => prev.filter(img => img.id !== imageId));
+      setDeletedImageIds(prev => [...prev, imageId]);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Görsel silinirken hata oluştu');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +77,7 @@ export default function AdminListingForm({
         price: parseFloat(price),
         period,
         listing_date: listingDate,
+        is_featured: isFeatured,
       };
 
       let listingId: string;
@@ -66,6 +95,29 @@ export default function AdminListingForm({
           throw new Error(data.error || 'İlan güncellenemedi');
         }
         listingId = listing.id;
+
+        // Yeni görselleri yükle (güncelleme için)
+        if (images.length > 0) {
+          const currentMaxOrder = existingImages.length > 0 
+            ? Math.max(...existingImages.map(img => img.order || 0))
+            : -1;
+
+          for (let i = 0; i < images.length; i++) {
+            const formData = new FormData();
+            formData.append('file', images[i]);
+            formData.append('listing_id', listingId);
+            formData.append('order', (currentMaxOrder + i + 1).toString());
+
+            const uploadResponse = await fetch('/api/admin/upload', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!uploadResponse.ok) {
+              console.error('Görsel yüklenemedi:', await uploadResponse.json());
+            }
+          }
+        }
       } else {
         // Yeni ilan - API kullan
         const response = await fetch('/api/admin/listings', {
@@ -196,6 +248,28 @@ export default function AdminListingForm({
           </div>
         </div>
 
+        {/* Öne Çıkan İlan */}
+        <div className="mb-6">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="is_featured"
+              checked={isFeatured}
+              onChange={(e) => setIsFeatured(e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <label htmlFor="is_featured" className="ml-3 flex items-center cursor-pointer">
+              <span className="text-sm font-medium text-gray-700">Öne Çıkan İlan</span>
+              <svg className="w-5 h-5 ml-1.5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            </label>
+          </div>
+          <p className="mt-1 text-sm text-gray-500 ml-8">
+            Öne çıkan ilanlar ana sayfada özel olarak gösterilir
+          </p>
+        </div>
+
         {/* Açıklama */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -211,15 +285,51 @@ export default function AdminListingForm({
           />
         </div>
 
-        {/* Görseller (sadece yeni ilan için) */}
-        {!listing && (
+        {/* Mevcut Görseller (düzenleme modunda) */}
+        {listing && existingImages.length > 0 && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Görseller
+              Mevcut Görseller
             </label>
-            <ImageUploader images={images} onChange={setImages} />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {existingImages.map((image) => (
+                <div key={image.id} className="relative group">
+                  <img
+                    src={image.image_url}
+                    alt="İlan görseli"
+                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteExistingImage(image.id)}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    title="Görseli sil"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                    #{image.order + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
+        {/* Yeni Görseller Ekle */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {listing ? 'Yeni Görseller Ekle' : 'Görseller'}
+          </label>
+          <ImageUploader images={images} onChange={setImages} />
+          {listing && (
+            <p className="mt-2 text-sm text-gray-500">
+              Yeni görseller mevcut görsellerin sonuna eklenecektir.
+            </p>
+          )}
+        </div>
 
         {/* Hata Mesajı */}
         {error && (

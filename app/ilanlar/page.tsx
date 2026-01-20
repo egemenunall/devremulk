@@ -6,8 +6,12 @@ import { FilterBar } from '@/components/FilterBar';
 import { getListings, getUniquePeriods } from '@/lib/api';
 import { ListingWithImages, FilterParams } from '@/lib/types';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 export default function IlanlarPage() {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('search');
+
   const [listings, setListings] = useState<ListingWithImages[]>([]);
   const [filteredListings, setFilteredListings] = useState<ListingWithImages[]>([]);
   const [periods, setPeriods] = useState<string[]>([]);
@@ -22,12 +26,23 @@ export default function IlanlarPage() {
         getUniquePeriods(),
       ]);
       setListings(fetchedListings);
-      setFilteredListings(fetchedListings);
+      
+      // Arama sorgusuna göre filtrele
+      if (searchQuery) {
+        const filtered = fetchedListings.filter((listing) =>
+          listing.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          listing.description.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setFilteredListings(filtered);
+      } else {
+        setFilteredListings(fetchedListings);
+      }
+      
       setPeriods(fetchedPeriods);
       setLoading(false);
     }
     fetchData();
-  }, []);
+  }, [searchQuery]);
 
   useEffect(() => {
     async function applyFilters() {
@@ -73,8 +88,22 @@ export default function IlanlarPage() {
           <FilterBar onFilterChange={handleFilterChange} availablePeriods={periods} />
         </div>
 
+        {/* Search Info */}
+        {searchQuery && !loading && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <span className="font-semibold">"{searchQuery}"</span> için arama sonuçları
+              {filteredListings.length > 0 && (
+                <span className="ml-2">
+                  - <span className="font-semibold">{filteredListings.length}</span> ilan bulundu
+                </span>
+              )}
+            </p>
+          </div>
+        )}
+
         {/* Results Count */}
-        {!loading && filteredListings.length > 0 && (
+        {!loading && filteredListings.length > 0 && !searchQuery && (
           <div className="mb-6 flex items-center justify-between">
             <p className="text-sm text-gray-600">
               <span className="font-semibold text-gray-900">{filteredListings.length}</span> ilan bulundu

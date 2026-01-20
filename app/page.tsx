@@ -5,6 +5,9 @@ import { ListingCard } from '@/components/ListingCard';
 import { getListings } from '@/lib/api';
 import { ListingWithImages } from '@/lib/types';
 import Link from 'next/link';
+import CurrencyTicker from '@/components/CurrencyTicker';
+import BannerCarousel from '@/components/BannerCarousel';
+import Logo from '@/components/Logo';
 
 export default function HomePage() {
   const [filteredListings, setFilteredListings] = useState<ListingWithImages[]>([]);
@@ -14,7 +17,9 @@ export default function HomePage() {
     async function fetchData() {
       setLoading(true);
       const fetchedListings = await getListings();
-      setFilteredListings(fetchedListings);
+      // Sadece öne çıkan ilanları göster
+      const featured = fetchedListings.filter(listing => listing.is_featured);
+      setFilteredListings(featured);
       setLoading(false);
     }
     fetchData();
@@ -28,14 +33,14 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-20 sm:pb-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
-            <div className="text-center lg:text-left">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+            <div className="text-center lg:text-left animate-slideInLeft">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6 tracking-tight">
                 Tatil hayalleriniz,{' '}
-                <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 bg-clip-text text-transparent animate-gradient">
                   gerçek oluyor
                 </span>
               </h1>
-              <p className="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed font-light">
                 En avantajlı devre mülk fırsatlarını keşfedin. Hayalinizdeki tatil evine sahip olmanın tam zamanı.
               </p>
               
@@ -59,24 +64,27 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   href="/ilanlar"
-                  className="inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30"
+                  className="group inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 hover:-translate-y-0.5"
                 >
                   İlanları Keşfet
-                  <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </Link>
                 <a
                   href="#how-it-works"
-                  className="inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+                  className="group inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:border-blue-600 hover:text-blue-600 transition-all hover:-translate-y-0.5"
                 >
                   Nasıl Çalışır?
+                  <svg className="ml-2 w-4 h-4 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </a>
               </div>
             </div>
 
             {/* Right Visual */}
-            <div className="relative hidden lg:block">
+            <div className="relative hidden lg:block animate-slideInRight">
               <div className="relative">
                 {/* Main Image Card */}
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl">
@@ -122,6 +130,74 @@ export default function HomePage() {
               <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-blue-100 to-blue-50 rounded-full blur-3xl opacity-50"></div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Currency Ticker */}
+      <CurrencyTicker />
+
+      {/* Banner Carousel */}
+      <BannerCarousel />
+
+      {/* Featured Listings */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <svg className="w-8 h-8 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Öne Çıkan İlanlar
+                </h2>
+                <p className="text-gray-600">
+                  Seçilmiş özel fırsatlar
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/ilanlar"
+              className="hidden sm:flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+            >
+              Tümünü Gör
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : filteredListings.length === 0 ? (
+            <div className="text-center py-20 bg-gray-50 rounded-xl">
+              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+              <p className="text-gray-600 text-lg">Henüz ilan bulunmuyor</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredListings.slice(0, 4).map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+              <div className="mt-8 text-center sm:hidden">
+                <Link
+                  href="/ilanlar"
+                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                >
+                  Tüm İlanları Gör
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -298,15 +374,14 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             {/* Brand */}
             <div className="md:col-span-1">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
+              <div className="flex items-center space-x-3 mb-4">
+                <Logo className="w-10 h-10" />
+                <div className="flex flex-col">
+                  <span className="font-bold text-xl">Lavinia</span>
+                  <span className="text-xs text-gray-400 tracking-wider uppercase">Reklam Pazarlama</span>
                 </div>
-                <span className="font-bold text-xl">Lavinia</span>
               </div>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-sm leading-relaxed">
                 Hayalinizdeki tatil evine ulaşmanın en kolay yolu
               </p>
             </div>
