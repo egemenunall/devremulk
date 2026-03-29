@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Normal ilan oluşturma
-    const { name, description, price, period, listing_date, is_featured, details } = body;
+    const { name, description, price, period, listing_date } = body;
 
-    if (!name || !description || price === undefined || price === null || !period || !listing_date) {
+    if (!name || !description || !price || !period || !listing_date) {
       return NextResponse.json({ error: 'Eksik alanlar' }, { status: 400 });
     }
 
@@ -86,8 +86,6 @@ export async function POST(request: NextRequest) {
           price: parseFloat(price),
           period,
           listing_date,
-          is_featured: Boolean(is_featured),
-          ...(details ? { details } : {}),
         },
       ])
       .select()
